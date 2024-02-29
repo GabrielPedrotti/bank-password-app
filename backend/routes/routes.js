@@ -3,7 +3,7 @@ const UserModel = require('../models/userModel');
 
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/user', async (req, res) => {
     try {
         const users = await UserModel.find()
         res.json(users)
@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.post('/', async (req, res) => {
+router.post('/user', async (req, res) => {
     const user = new UserModel({
         bankAccountId: req.body.bankAccountId
     })
@@ -23,6 +23,11 @@ router.post('/', async (req, res) => {
     } catch (error) {
         res.status(400).json({ message: error.message })
     }
+})
+
+router.get('/bank-keyboard', (req, res) => {
+    // TODO
+    res.send('Deve retornar os pares de teclas e a ordem em que aparecerão na tela')
 })
 
 module.exports = router;
