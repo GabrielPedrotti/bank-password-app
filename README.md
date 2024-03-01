@@ -28,3 +28,5 @@ The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
+Our Canva's project: https://www.canva.com/design/DAF-TU6v74A/okdicsVWPKOGwuRJYpNRMw/edit?utm_content=DAF-TU6v74A&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
