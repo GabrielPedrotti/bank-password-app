@@ -1,41 +1,77 @@
-import React from 'react';
-import logo from '../../logo.svg';
-import './Login.css';
-import Button from '@mui/material/Button';
+import React from "react";
+import logo from "../../logo.svg";
+import Button from "@mui/material/Button";
 import { tss } from "tss-react/mui";
-import { Header } from '../components/header';
+import { Header } from "../components/header";
 
-const useStyles = tss.withName('Login').create({
-  app: {
-    textAlign: 'center',
-  },
+const useStyles = tss.withName("Login").create({
+  app: {},
   appHeader: {
-    backgroundColor: '#282c34',
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
+    position: "fixed",
+    border: "1px solid green",
+    top: "0",
+    width: "100%",
+    zIndex: "100",
   },
   appLogo: {
-    height: '40vmin',
-    pointerEvents: 'none',
-  }
-})
+    height: "40vmin",
+    pointerEvents: "none",
+  },
+  appBody: {
+    border: "1px solid cyan",
+    position: "relative",
+  },
+});
 
 function Login() {
-  const { classes } = useStyles()
+  const { classes } = useStyles();
 
   return (
     <div className={classes.app}>
-      <Header />
-      <div className={classes.appHeader}>
-        <img src={logo} className={classes.appLogo} alt="logo" />
-        <Button variant="contained" color="primary">
-          Learn React
+      <header className={classes.appHeader}>
+        <Header />
+      </header>
+      <body className={classes.appBody}>
+        <p>
+          fsdafasdfasdfasdfdsfasdfsaaaaaaaaaaaaaaaaaadfsdafsdafsadfasdfasdfsdaf
+        </p>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
         </Button>
-      </div>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+        <Button>
+          <img src={logo} className={classes.appLogo} alt="logo" />
+        </Button>
+      </body>
     </div>
   );
 }
