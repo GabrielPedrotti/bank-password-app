@@ -7,28 +7,32 @@ const useStyles = tss.withName("Header").create({
     textAlign: "center",
   },
   appHeader: {
-    backgroundColor: "white",
-    //minHeight: "100vh",
+    backgroundColor: "#222",
     display: "flex",
-    //flexDirection: "column",
     alignItems: "center",
-    //justifyContent: "center",
     color: "cyan",
-    //border: "1px solid red",
-  },
-  appLogo: {
-    height: "40vmin",
-    pointerEvents: "none",
-    border: "1px solid green",
   },
   appButton: {
     marginLeft: "5px",
-    marginTop: "7px",
+    marginRight: "20px",
+    backgroundColor: "white",
+    color: "black",
+    '&:hover': {
+      backgroundColor: "lightgrey",
+    },
+    '&:disabled': {
+      color: "grey",
+      backgroundColor: "lightgrey",
+    },
   },
   appTextField: {
-    //border: "1px solid red",
-    width: "80%",
-    marginLeft: "5px",
+    width: "30%",
+    marginRight: "5px",
+    marginLeft: "20px",
+    marginBottom: "8px",
+    backgroundColor: "white",
+    borderRadius: "5px",
+
   },
 });
 
@@ -43,7 +47,11 @@ export function Header() {
   const handleAccountNumberChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setAccountNumber(event.target.value);
+    // Only allow numbers
+    const regex = /^[0-9\b]+$/;
+    if (event.target.value === "" || regex.test(event.target.value)) {
+      setAccountNumber(event.target.value);
+    }
   };
 
   return (
@@ -51,20 +59,20 @@ export function Header() {
       <header className={classes.appHeader}>
         <TextField
           className={classes.appTextField}
-          label="Account Number"
-          variant="outlined"
+          label="Número da Conta"
+          variant="filled"
           value={accountNumber}
           onChange={handleAccountNumberChange}
-          fullWidth
-          margin="normal"
+          margin="dense"
+          color="success"
           size="small"
+          inputProps={{ pattern: "[0-9]*" }}
         />
         <Button
           className={classes.appButton}
-          //sx={{ backgroundColor: "white" }}
           variant="contained"
-          color="secondary"
           size="medium"
+          disabled={!accountNumber}
           onClick={handleLogin}
         >
           Login

@@ -8,7 +8,6 @@ const useStyles = tss.withName("Login").create({
   app: {},
   appHeader: {
     position: "fixed",
-    border: "1px solid green",
     top: "0",
     width: "100%",
     zIndex: "100",
