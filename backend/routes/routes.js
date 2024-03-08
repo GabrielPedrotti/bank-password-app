@@ -7,9 +7,6 @@ router.post('/user', UserService.createUser)
 
 router.get('/user/:username', UserService.getUser)
 
-router.get('/bank-keyboard', (req, res) => {
-    // TODO
-    res.send('Deve retornar os pares de teclas e a ordem em que aparecerão na tela')
-})
+router.get('/user/:username/bank-keyboard', UserService.getUserBankKeyboard)
 
 module.exports = router;
