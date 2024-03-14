@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { tss } from "tss-react/mui";
 import { TextField, Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const useStyles = tss.withName("Header").create({
   app: {
@@ -37,11 +38,13 @@ const useStyles = tss.withName("Header").create({
 });
 
 export function Header() {
+  const navigate = useNavigate();
   const { classes } = useStyles();
   const [accountNumber, setAccountNumber] = useState("");
 
   const handleLogin = () => {
     console.log("Logging in with account number:", accountNumber);
+    navigate("/password");
   };
 
   const handleAccountNumberChange = (
@@ -66,7 +69,7 @@ export function Header() {
           margin="dense"
           color="success"
           size="small"
-          inputProps={{ pattern: "[0-9]*" }}
+          inputProps={{ pattern: "[0-9]*", maxLength: 12 }}
         />
         <Button
           className={classes.appButton}
