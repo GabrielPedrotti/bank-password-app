@@ -80,7 +80,7 @@ module.exports = {
     }
 }
 
-function generateKeyboardConditions(takenNumbers, keyboard) {]
+function generateKeyboardConditions(takenNumbers, keyboard) {
     // entender pq as vezes repete o nro mesmo validando...
     if (keyboard.length === 5) return keyboard;
 
