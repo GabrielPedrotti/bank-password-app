@@ -33,7 +33,7 @@ module.exports = {
             if (userExists) return res.status(409).json({ message: 'Usuário já cadastrado' });
 
             const { iv, encryptedData } = encrypt(password)
-            await collection.insertOne({ username, bankId, password: { encrypted: encryptedData, iv, key } });
+            await collection.insertOne({ username, bankId, password: { encrypted: encryptedData, iv, key: key.toString('hex') } });
 
             return res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
         } catch (error) {
@@ -75,7 +75,7 @@ module.exports = {
             const takenNumbers = [];
             const keyboardNumbers = generateKeyboardConditions(takenNumbers, keyboard);
 
-            await collection.update({ username }, { $set: { lastKeyboardNumbers: keyboardNumbers } })
+            await collection.updateOne({ username }, { $set: { lastKeyboardNumbers: keyboardNumbers } })
 
             return res.status(200).json({ keyboardNumbers });
         } catch (error) {
@@ -87,24 +87,43 @@ module.exports = {
 
     async checkUserPassword(req, res) {
         try {
-            const { username, passwordKeyboard } = req.body;
+            const { username, keyboardPassword } = req.body;
 
             const collection = await databaseConnect();
             const user = await collection.findOne({
                 username
             });
 
-            const decryptedPassword = decrypt({ iv: user.password.iv, encryptedData: user.password.encrypted, key  });
+            const decryptedPassword = decrypt({ iv: user.password.iv, encryptedData: user.password.encrypted, key: user.password.key });
 
-            console.log('Senha desencriptada: ', decryptedPassword);
+            const isPasswordCorrect = comparePasswordAndKeyboard(decryptedPassword, keyboardPassword);
 
-            return res.status(200).json({ decryptedPassword });
+            if (!isPasswordCorrect) return res.status(400).json({ message: 'Senha incorreta', isPasswordCorrect });
+
+            await collection.updateOne({ username }, { $set: { checkedAt: new Date().toISOString() } });
+
+            return res.status(200).json({ message: 'Senha correta', isPasswordCorrect });
         } catch (error) {
             console.error(error);
         } finally {
             await client.close();
         }
     }
+}
+
+function comparePasswordAndKeyboard(password, keyboardValues) {
+    const passwordNumbers = password.split('');
+
+    let totalCorrect = 0;
+    for (let i = 0; i < passwordNumbers.length; i++) {
+        if (keyboardValues[i].values.includes(Number(passwordNumbers[i]))) {
+            totalCorrect++;
+        }
+    }
+
+    if (totalCorrect === passwordNumbers.length) return true;
+
+    return false
 }
 
 function generateKeyboardConditions(takenNumbers, keyboard) {
@@ -133,9 +152,8 @@ function encrypt(text) {
 }
 
 function decrypt(data) {
-    let ivBuffer = Buffer.from(data.iv, 'hex');
     let encryptedText = Buffer.from(data.encryptedData, 'hex');
-    let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(data.key), ivBuffer);
+    let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(data.key, 'hex'), Buffer.from(data.iv, 'hex'));
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
