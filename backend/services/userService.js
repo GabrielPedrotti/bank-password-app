@@ -1,6 +1,10 @@
 const { MongoClient } = require('mongodb');
 const { DB_CONNECTION_STRING } = process.env;
+const crypto = require('crypto');
 const client = new MongoClient(DB_CONNECTION_STRING);
+const { CRYPTO_SECRET_KEY } = process.env
+const key = crypto.randomBytes(32);
+const iv = crypto.randomBytes(16);
 
 async function databaseConnect() {
     await client.connect();
@@ -29,7 +33,8 @@ module.exports = {
             const userExists = await collection.findOne({ username });
             if (userExists) return res.status(409).json({ message: 'Usuário já cadastrado' });
 
-            await collection.insertOne({ username, bankId, password });
+            const { iv, encryptedData } = encrypt(password)
+            await collection.insertOne({ username, bankId, password: encryptedData, cryptoIv: iv });
 
             return res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
         } catch (error) {
@@ -71,7 +76,30 @@ module.exports = {
             const takenNumbers = [];
             const keyboardNumbers = generateKeyboardConditions(takenNumbers, keyboard);
 
+            await collection.update({ username }, { $set: { lastKeyboardNumbers: keyboardNumbers } })
+
             return res.status(200).json({ keyboardNumbers });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            await client.close();
+        }
+    },
+
+    async checkUserPassword(req, res) {
+        try {
+            const { username, passwordKeyboard } = req.body;
+
+            const collection = await databaseConnect();
+            const user = await collection.findOne({
+               username
+            });
+
+            const decryptedPassword = decrypt({ iv: user.cryptoIv, encryptedData: user.password });
+
+            console.log('Senha desencriptada: ', decryptedPassword);
+
+            return res.status(200).json({ decryptedPassword });
         } catch (error) {
             console.error(error);
         } finally {
@@ -81,26 +109,35 @@ module.exports = {
 }
 
 function generateKeyboardConditions(takenNumbers, keyboard) {
-    // entender pq as vezes repete o nro mesmo validando...
     if (keyboard.length === 5) return keyboard;
 
     let firstRandomNumber = Math.floor(Math.random() * 10)
     let secondRandomNumber = Math.floor(Math.random() * 10)
 
-    console.log('Numeros pegos: ', takenNumbers)
-    console.log('Primeiro numero gerado: ', firstRandomNumber)
-    console.log('Segundo numero gerado: ', secondRandomNumber)
-    console.log('Teclado oficial: ', keyboard)
-
-    if (takenNumbers.includes(firstRandomNumber) || takenNumbers.includes(secondRandomNumber)) {
-        console.log('Um dos números ja foi pego, gerando novamente...')
+    if (takenNumbers.includes(firstRandomNumber) || takenNumbers.includes(secondRandomNumber) || firstRandomNumber === secondRandomNumber) {
         return generateKeyboardConditions(takenNumbers, keyboard);
     }
 
-    const sortedNumbers = [firstRandomNumber, secondRandomNumber].sort();
+    const sortedNumbers = [firstRandomNumber, secondRandomNumber].sort((a, b) => a - b);
 
     keyboard.push({ values: sortedNumbers });
     takenNumbers.push(firstRandomNumber, secondRandomNumber);
 
     return generateKeyboardConditions(takenNumbers, keyboard);
 }
+
+function encrypt(text) {
+    let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return { iv: iv.toString('hex'), encryptedData: encrypted.toString('hex') };
+ }
+
+ function decrypt(data) {
+    let iv = Buffer.from(data.iv, 'hex');
+    let encryptedText = Buffer.from(data.encryptedData, 'hex');
+    let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key), iv);
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
+ }
