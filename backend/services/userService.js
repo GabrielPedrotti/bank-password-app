@@ -2,7 +2,6 @@ const { MongoClient } = require('mongodb');
 const { DB_CONNECTION_STRING } = process.env;
 const crypto = require('crypto');
 const client = new MongoClient(DB_CONNECTION_STRING);
-const { CRYPTO_SECRET_KEY } = process.env
 const key = crypto.randomBytes(32);
 const iv = crypto.randomBytes(16);
 
@@ -34,7 +33,7 @@ module.exports = {
             if (userExists) return res.status(409).json({ message: 'Usuário já cadastrado' });
 
             const { iv, encryptedData } = encrypt(password)
-            await collection.insertOne({ username, bankId, password: encryptedData, cryptoIv: iv });
+            await collection.insertOne({ username, bankId, password: { encrypted: encryptedData, iv, key } });
 
             return res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
         } catch (error) {
@@ -92,10 +91,10 @@ module.exports = {
 
             const collection = await databaseConnect();
             const user = await collection.findOne({
-               username
+                username
             });
 
-            const decryptedPassword = decrypt({ iv: user.cryptoIv, encryptedData: user.password });
+            const decryptedPassword = decrypt({ iv: user.password.iv, encryptedData: user.password.encrypted, key  });
 
             console.log('Senha desencriptada: ', decryptedPassword);
 
@@ -131,13 +130,13 @@ function encrypt(text) {
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
     return { iv: iv.toString('hex'), encryptedData: encrypted.toString('hex') };
- }
+}
 
- function decrypt(data) {
-    let iv = Buffer.from(data.iv, 'hex');
+function decrypt(data) {
+    let ivBuffer = Buffer.from(data.iv, 'hex');
     let encryptedText = Buffer.from(data.encryptedData, 'hex');
-    let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key), iv);
+    let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(data.key), ivBuffer);
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
- }
+}
