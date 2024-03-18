@@ -71,7 +71,7 @@ module.exports = {
 
             if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
-            return res.status(200).json(user);
+            return res.status(200).json({ username: user.username, bankId: user.bankId, sessionId: req.sessionID });
         } catch (error) {
             console.error(error);
             return res.status(500).json({ message: 'Erro ao buscar usuário' });
@@ -82,10 +82,10 @@ module.exports = {
 
     async getUserBankKeyboard(req, res) {
         try {
-            const { username } = req.params;
+            const { bankId } = req.params;
 
             const collection = await databaseConnect();
-            const user = await collection.findOne({ username });
+            const user = await collection.findOne({ bankId });
 
             if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
@@ -103,12 +103,14 @@ module.exports = {
 
     async checkUserPassword(req, res) {
         try {
-            const { username, keyboardPassword } = req.body;
+            const { bankId, keyboardPassword } = req.body;
 
             const collection = await databaseConnect();
             const user = await collection.findOne({
-                username
+                bankId
             });
+
+            if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
             const decryptedPassword = decrypt({ iv: user.password.iv, encryptedData: user.password.encrypted, key: user.password.key });
 
@@ -116,7 +118,7 @@ module.exports = {
 
             if (!isPasswordCorrect) return res.status(400).json({ message: 'Senha incorreta', isPasswordCorrect });
 
-            await collection.updateOne({ username }, { $set: { checkedAt: new Date().toISOString() } });
+            await collection.updateOne({ bankId }, { $set: { checkedAt: new Date().toISOString() } });
 
             return res.status(200).json({ message: 'Senha correta', isPasswordCorrect });
         } catch (error) {
