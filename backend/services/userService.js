@@ -62,6 +62,24 @@ module.exports = {
         }
     },
 
+    async getUserByBankId(req, res) {
+        try {
+            const { id } = req.params;
+
+            const collection = await databaseConnect();
+            const user = await collection.findOne({ bankId: Number(id) });
+
+            if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+
+            return res.status(200).json(user);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Erro ao buscar usuário' });
+        } finally {
+            await client.close();
+        }
+    },
+
     async getUserBankKeyboard(req, res) {
         try {
             const { username } = req.params;
@@ -74,8 +92,6 @@ module.exports = {
             const keyboard = []
             const takenNumbers = [];
             const keyboardNumbers = generateKeyboardConditions(takenNumbers, keyboard);
-
-            await collection.updateOne({ username }, { $set: { lastKeyboardNumbers: keyboardNumbers } })
 
             return res.status(200).json({ keyboardNumbers });
         } catch (error) {
