@@ -9,7 +9,7 @@ const AppRoutes = () => {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Login />} />
-                <Route path="/password" element={<Step2 />} />
+                <Route path="/password/*" element={<Step2 />} />
             </Routes>
         </BrowserRouter>
     )

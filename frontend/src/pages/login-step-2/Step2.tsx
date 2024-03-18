@@ -1,7 +1,10 @@
-import React, { useState } from "react";
-import { Typography, Button, Box, IconButton } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Typography, Button, Box, IconButton, CircularProgress  } from "@mui/material";
 import { tss } from "tss-react/mui";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
+import { getPasswordKeyboard, checkPassword, getUserAccount} from "../../service/userAccount";
+import swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const useStyles = tss.withName("Step2").create({
   box: {
@@ -96,46 +99,77 @@ function Step2() {
   const [inputValue, setInputValue] = useState("");
   const [arrayValue, setArrayValue] = useState<any>([]);
   const [error, setError] = useState(false);
-  const [helperText, setHelperText] = useState(
-    "Senha Incorreta, digite novamente.",
-  );
+  const [helperText, setHelperText] = useState("");
+  const [sessionId, setSessionId] = useState<any>("");
+  const [accountNumber, setAccountNumber] = useState<any>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const [buttonsValues, setButtonsValues] = useState({
-    keyboardNumbers: [
-      {
-        values: [1, 2],
-      },
-      {
-        values: [3, 4],
-      },
-      {
-        values: [5, 6],
-      },
-      {
-        values: [7, 8],
-      },
-      {
-        values: [9, 0],
-      },
-    ],
-  });
+  const [buttonsValues, setButtonsValues] = useState<any>({});
+
+  useEffect(() => {
+    const url = window.location.href;
+    const queryString = url.split("?=").pop();
+    const accountNumber = url.split("/").pop()?.split("?=")[0];
+
+    setSessionId(queryString);
+    setAccountNumber(accountNumber);
+  }, []);
+
+  useEffect(() => {
+    console.log('sessionId', sessionId)
+    if(sessionId && accountNumber){
+      getKeyboardValues();
+    }
+  }, [sessionId]);
+
+  const getKeyboardValues = async () => {
+    try {
+      const data = await getPasswordKeyboard(accountNumber, sessionId);
+      setButtonsValues(data);
+    } catch (error: any) {
+      console.log('error', error)
+    }
+  }
 
   const handleButtonClick = (value: any) => {
-    if (arrayValue.length <= 6) {
-      setArrayValue([...arrayValue, value]);
+    if (arrayValue.length <= 5) {
+      setArrayValue([...arrayValue, {values: value}]);
     }
-
-    console.log("arrayValue", arrayValue);
   };
 
   const handleClearButtonClick = () => {
     setInputValue("");
     setArrayValue([]);
+    setIsLoading(false);
   };
 
-  const handleLogin = () => {
-    // Perform login logic here
-    console.log("Logging in with input:", inputValue);
+  const handleLogin = async () => {
+    setIsLoading(true);
+    setHelperText("");
+    setError(false);
+    try {
+      await checkPassword(accountNumber, arrayValue, sessionId);
+      swal.fire({
+        title: "Sucesso!",
+        text: "Você foi logado com sucesso!",
+        icon: "success",
+        confirmButtonText: "Ok",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/");
+      }});
+      setIsLoading(false);
+    } catch (error: any) {
+      const errorMessage = error.response.data.message;
+      setHelperText(errorMessage);
+      setError(true);
+      const data = await getUserAccount(accountNumber);
+      navigate(`/password/${data.bankId}?=${data.sessionId}`);
+      setSessionId(data.sessionId);
+      handleClearButtonClick();
+      setIsLoading(false)
+    }
   };
 
   return (
@@ -161,11 +195,11 @@ function Step2() {
         <section className={classes.sections}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div className={classes.passwordButtons}>
-              {buttonsValues?.keyboardNumbers.map((buttonValue, index) => (
+              {Object.keys(buttonsValues).length > 0 && buttonsValues?.keyboardNumbers.map((buttonValue: any, index: any) => (
                 <div key={index}>
                   <Button
                     className={classes.button}
-                    disabled={arrayValue.length === 6}
+                    disabled={arrayValue.length === 5}
                     onClick={() => handleButtonClick(buttonValue.values)}
                   >
                     {buttonValue.values[0] + " ou " + buttonValue.values[1]}
@@ -189,13 +223,24 @@ function Step2() {
               >
                 Limpar
               </Button>
-              <Button
-                className={classes.button}
-                onClick={handleLogin}
-                disabled={arrayValue.length !== 6}
-              >
-                Login
-              </Button>
+              {!isLoading ? (
+                <Button
+                  className={classes.button}
+                  onClick={handleLogin}
+                  disabled={arrayValue.length !== 5}
+                >
+                  Login
+                </Button>
+              ): (
+                <IconButton
+                  className={classes.button}
+                  disabled={isLoading}
+                  aria-label="loading"
+                >
+                  <CircularProgress size={20} />
+                </IconButton>
+              )}
+
             </div>
           </div>
         </section>

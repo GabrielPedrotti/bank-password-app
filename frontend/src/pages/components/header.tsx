@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { tss } from "tss-react/mui";
 import { TextField, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { getUserAccount } from "../../service/userAccount";
 
 const useStyles = tss.withName("Header").create({
   app: {
@@ -41,16 +42,25 @@ export function Header() {
   const navigate = useNavigate();
   const { classes } = useStyles();
   const [accountNumber, setAccountNumber] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleLogin = () => {
-    console.log("Logging in with account number:", accountNumber);
-    navigate("/password");
+  const handleLogin = async () => {
+    setErrorMessage("");
+    try {
+      const data = await getUserAccount(accountNumber);
+      navigate(`/password/${data.bankId}?=${data.sessionId}`);
+
+    } catch (error: any) {
+      setAccountNumber("");
+      const errorMessage = error.response.data.message;
+      setErrorMessage(errorMessage);
+    }
+    
   };
 
   const handleAccountNumberChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    // Only allow numbers
     const regex = /^[0-9\b]+$/;
     if (event.target.value === "" || regex.test(event.target.value)) {
       setAccountNumber(event.target.value);
@@ -70,6 +80,8 @@ export function Header() {
           color="success"
           size="small"
           inputProps={{ pattern: "[0-9]*", maxLength: 12 }}
+          error={errorMessage !== "" && !accountNumber}
+          helperText={!accountNumber ? errorMessage : null}
         />
         <Button
           className={classes.appButton}

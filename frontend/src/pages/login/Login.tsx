@@ -1,7 +1,5 @@
 import React from "react";
-import logo from "../../logo.svg";
 import banco from "../../banco.jpg";
-import Button from "@mui/material/Button";
 import { tss } from "tss-react/mui";
 import { Header } from "../components/header";
 
