@@ -120,6 +120,8 @@ module.exports = {
 
             await collection.updateOne({ bankId }, { $set: { checkedAt: new Date().toISOString() } });
 
+            destroySession(req);
+
             return res.status(200).json({ message: 'Senha correta', isPasswordCorrect });
         } catch (error) {
             console.error(error);
@@ -175,4 +177,13 @@ function decrypt(data) {
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
+}
+
+function destroySession(req) {
+    req.session.destroy((err) => {
+        if (err) {
+            console.log(err)
+        }
+        console.log('Session destroyed')
+    });
 }
