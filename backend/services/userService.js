@@ -105,6 +105,8 @@ module.exports = {
         try {
             const { bankId, keyboardPassword } = req.body;
 
+            destroySession(req);
+
             const collection = await databaseConnect();
             const user = await collection.findOne({
                 bankId: Number(bankId),
@@ -119,8 +121,6 @@ module.exports = {
             if (!isPasswordCorrect) return res.status(400).json({ message: 'Senha incorreta', isPasswordCorrect });
 
             await collection.updateOne({ bankId }, { $set: { checkedAt: new Date().toISOString() } });
-
-            destroySession(req);
 
             return res.status(200).json({ message: 'Senha correta', isPasswordCorrect });
         } catch (error) {
