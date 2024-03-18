@@ -82,7 +82,7 @@ module.exports = {
 
     async getUserBankKeyboard(req, res) {
         try {
-            const { bankId } = req.params;
+            const bankId = Number(req.params.bankId);
 
             const collection = await databaseConnect();
             const user = await collection.findOne({ bankId });
