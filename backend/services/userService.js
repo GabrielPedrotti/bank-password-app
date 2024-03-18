@@ -107,7 +107,7 @@ module.exports = {
 
             const collection = await databaseConnect();
             const user = await collection.findOne({
-                bankId
+                bankId: Number(bankId),
             });
 
             if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
