@@ -20,7 +20,7 @@ module.exports = {
             if (username.length < 3) return res.status(400).json({ message: 'Nome de usuário deve ter no mínimo 3 caracteres' });
             if (!password) return res.status(400).json({ message: 'Senha não informada' });
             if (!Number(password)) return res.status(400).json({ message: 'Senha deve conter apenas números' });
-            if (password.length !== 5) return res.status(400).json({ message: 'Senha deve conter 5 números' });
+            if (password.length !== 6) return res.status(400).json({ message: 'Senha deve conter 6 números' });
 
             const collection = await databaseConnect();
 
