@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Button, Box, IconButton, CircularProgress  } from "@mui/material";
+import {
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  CircularProgress,
+} from "@mui/material";
 import { tss } from "tss-react/mui";
 import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
-import { getPasswordKeyboard, checkPassword, getUserAccount} from "../../service/userAccount";
+import {
+  getPasswordKeyboard,
+  checkPassword,
+  getUserAccount,
+} from "../../service/userAccount";
 import swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 
@@ -112,13 +122,17 @@ function Step2() {
     const queryString = url.split("?=").pop();
     const accountNumber = url.split("/").pop()?.split("?=")[0];
 
+    if (!accountNumber) {
+      navigate("/");
+      return;
+    }
+
     setSessionId(queryString);
     setAccountNumber(accountNumber);
   }, []);
 
   useEffect(() => {
-    console.log('sessionId', sessionId)
-    if(sessionId && accountNumber){
+    if (sessionId && accountNumber) {
       getKeyboardValues();
     }
   }, [sessionId]);
@@ -128,13 +142,14 @@ function Step2() {
       const data = await getPasswordKeyboard(accountNumber, sessionId);
       setButtonsValues(data);
     } catch (error: any) {
-      console.log('error', error)
+      console.log("error", error);
+      navigate("/");
     }
-  }
+  };
 
   const handleButtonClick = (value: any) => {
-    if (arrayValue.length <= 5) {
-      setArrayValue([...arrayValue, {values: value}]);
+    if (arrayValue.length <= 6) {
+      setArrayValue([...arrayValue, { values: value }]);
     }
   };
 
@@ -150,15 +165,18 @@ function Step2() {
     setError(false);
     try {
       await checkPassword(accountNumber, arrayValue, sessionId);
-      swal.fire({
-        title: "Sucesso!",
-        text: "Você foi logado com sucesso!",
-        icon: "success",
-        confirmButtonText: "Ok",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate("/");
-      }});
+      swal
+        .fire({
+          title: "Sucesso!",
+          text: "Você foi logado com sucesso!",
+          icon: "success",
+          confirmButtonText: "Ok",
+        })
+        .then((result) => {
+          if (result.isConfirmed) {
+            navigate("/");
+          }
+        });
       setIsLoading(false);
     } catch (error: any) {
       const errorMessage = error.response.data.message;
@@ -168,7 +186,7 @@ function Step2() {
       navigate(`/password/${data.bankId}?=${data.sessionId}`);
       setSessionId(data.sessionId);
       handleClearButtonClick();
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
 
@@ -195,17 +213,20 @@ function Step2() {
         <section className={classes.sections}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div className={classes.passwordButtons}>
-              {Object.keys(buttonsValues).length > 0 && buttonsValues?.keyboardNumbers.map((buttonValue: any, index: any) => (
-                <div key={index}>
-                  <Button
-                    className={classes.button}
-                    disabled={arrayValue.length === 5}
-                    onClick={() => handleButtonClick(buttonValue.values)}
-                  >
-                    {buttonValue.values[0] + " ou " + buttonValue.values[1]}
-                  </Button>
-                </div>
-              ))}
+              {Object.keys(buttonsValues).length > 0 &&
+                buttonsValues?.keyboardNumbers.map(
+                  (buttonValue: any, index: any) => (
+                    <div key={index}>
+                      <Button
+                        className={classes.button}
+                        disabled={arrayValue.length === 6}
+                        onClick={() => handleButtonClick(buttonValue.values)}
+                      >
+                        {buttonValue.values[0] + " ou " + buttonValue.values[1]}
+                      </Button>
+                    </div>
+                  ),
+                )}
             </div>
             {error && <Typography color="error">{helperText}</Typography>}
           </div>
@@ -227,11 +248,11 @@ function Step2() {
                 <Button
                   className={classes.button}
                   onClick={handleLogin}
-                  disabled={arrayValue.length !== 5}
+                  disabled={arrayValue.length !== 6}
                 >
                   Login
                 </Button>
-              ): (
+              ) : (
                 <IconButton
                   className={classes.button}
                   disabled={isLoading}
@@ -240,7 +261,6 @@ function Step2() {
                   <CircularProgress size={20} />
                 </IconButton>
               )}
-
             </div>
           </div>
         </section>
